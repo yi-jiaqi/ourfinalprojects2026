@@ -1,0 +1,696 @@
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Finite Catft 🐱</title>
+<style>
+  
+
+body {
+  font-family: system-ui, sans-serif;
+  background: #111;
+  color: #fff;
+  margin: 0;
+  padding: 20px;
+}
+h1 { text-align: center; }
+#game {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  max-width: 900px;
+  margin: auto;
+}
+.panel {
+  background: #1e1e1e;
+  border-radius: 10px;
+  padding: 15px;
+  overflow-y: auto;
+  max-height: 70vh;
+}
+.item {
+  padding: 6px 10px;
+  margin: 4px 0;
+  background: #2b2b2b;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.item.selected {
+  background: #ff8fd4;
+  color: #000;
+  font-weight: bold;
+}
+button {
+  width: 100%;
+  padding: 10px;
+  margin-top: 10px;
+  font-size: 16px;
+  border-radius: 8px;
+  border: none;
+  cursor: pointer;
+  background: #ff8fd4;
+  color: #000;
+} 
+  
+#result {
+  margin-top: 10px;
+  font-size: 18px;
+  text-align: center;
+}
+  h3 {
+    text-align: center
+  }
+
+
+
+
+
+ 
+
+</style>
+</head>
+<body>
+
+<h1>Finite Catft 🐱</h1>
+  <h3>Comment what you found from Candy 🍬, Chocolate 🍫, and Red Envelopes 🧧!</h3>
+
+  
+
+
+<div id="game">
+  <div class="panel">
+    <h2>Items</h2>
+    <div id="items"></div>
+  </div>
+  <div class="panel">
+    <h2>Crafting</h2>
+    <div id="selected"></div>
+    <button onclick="craft()">Craft 😼</button> <div class="center">
+  <form action="https://scratch.mit.edu/projects/1278911068/" target="_blank">
+    <button type="submit">Comment</button>
+  </form>
+    <form action="https://codepen.io/CatsRule72/pen/NPrZoVY" target="_blank">
+<button type="submit">Lore</button>
+  </form>
+
+<style>
+.center {
+  text-align: center;
+}
+
+.center form {
+  display: inline-block;
+}
+</style>
+    <div id="result"></div>
+  </div>
+</div>
+  
+
+<script>
+/* ================= BASE ITEMS ================= */
+
+const BASE_ITEMS = ["Paw", "Fur", "Heart", "Cute", "Sound"];
+
+/* ================= EMOJIS (ALL ITEMS) ================= */
+
+const EMOJIS = {
+  Paw: "🐾",
+  Fur: "🧶",
+  Heart: "❤️",
+  Cute: "✨",
+  Sound: "🔊",
+
+  Cat: "🐱",
+  Love: "💖",
+  Addorable: "🥰",
+  "Best Friend": "🤝",
+  Fluffy: "☁️",
+  Cloud: "☁️",
+  "Toe Beans": "🐾💗",
+  "More Cats": "🐱🐱",
+  "TOO CUTE": "😻",
+  "Emotional Damage": "💥😭",
+  "Loyal Cat": "🫶🐱",
+
+  Scratch: "🩹",
+  Apology: "🙏",
+  Hug: "🤗",
+  Yarn: "🧶",
+  "More Paws": "🐾🐾",
+
+  Meow: "😺",
+  Toy: "🧸",
+  Gender: "⚧️",
+  "Male Cat": "😼",
+  "Female Cat": "😺",
+  Egg: "🥚",
+  Kitten: "🐱‍👶",
+
+  Purr: "😽",
+  Comfort: "🤍",
+  "Happy Cat": "😸",
+  Bliss: "🌸",
+
+  Claw: "🗡️🐾",
+  Violence: "💢",
+  Guilt: "💔",
+  Forgiveness: "💞",
+
+  Play: "🎾",
+  Chaos: "💥",
+  Joy: "🌈",
+
+  Zoomies: "⚡🐱",
+  Exhausted: "😴",
+  Nap: "💤",
+  Loaf: "🍞🐱",
+
+  Family: "👨‍👩‍👦🐱",
+  Home: "🏠",
+  Box: "📦",
+  Schrödinger: "📦🐱❓",
+  Mother: "👩🐱",
+  Father: "👨🐱",
+  Milk: "🥛",
+
+  Loud: "📢",
+  "Big Yarn": "🧶🧶",
+  "Broken Toy": "🧩",
+  "Sad Cat": "😿",
+  Bittersweet: "🥲",
+  Cry: "😭",
+  Healing: "💊",
+
+  Overstimulated: "😵‍💫",
+  Meltdown: "🤯",
+  Safe: "🛡️",
+  "Protected Cat": "🛡️🐱",
+
+  "Sad Cat Meme": "😿😂",
+  Meme: "😂",
+  Internet: "🌐",
+  Viral: "🔥",
+  Fame: "🌟",
+  "Famous Cat": "😼✨",
+
+  Time: "⏳",
+  "Elder Cat": "😼🧠",
+  Hyper: "⚡",
+  Break: "☕",
+
+  Memory: "🧠",
+  Legacy: "🏛️",
+  Stars: "⭐",
+  Constellation: "🌌",
+  Cafterlife: "☁️🐱",
+
+  Robot: "🤖",
+  "Cat AI": "🐱🤖",
+  "Catpen AI": "🧪🐱",
+  CatGPT: "😼💻",
+
+  Windows: "🪟",
+  Catcrosoft: "😼🪟",
+  Catpliot: "🧭🐱",
+
+  Noise: "📢",
+  "Sound Engine": "🎛️",
+  "Search Engine": "🔍",
+  Caatgle: "🔍🐱",
+  "Caatgle Catmeni": "💎🐱",
+
+  Phone: "📱",
+  iMacat: "🖥️🐱",
+  Capple: "🍎🐱",
+  iPhocat: "📱🐱",
+  Tablet: "📲",
+  iPacat: "📲🐱",
+  Catri: "🗣️🐱",
+  
+  Chonker: "😻",
+  Workshop: "🛠️",
+  Game: "🎮",
+  Lore: "📖",
+  Dev: "👨‍💻",
+  Fish: "🐟",
+  
+  Night: "🌘",
+  Morning: "🌅",
+  Midnight: "🌕",
+  Noon: "☀️",
+  Afternoon: "🌤️",
+  Predawn: "🌒",
+  
+  Paper: "📄",
+  Money: "💲",
+  Feather: "🪶",
+  "Dream Residue": "💤🫠",
+  "Empty Cafterlife Map": "🫙🐱🗺️",
+  "Cafterlife Map": "🐱🗺️",
+  "Reunion": "🤗😽",
+  
+  Catft: "🐱🤖",
+  Cube: "🪨🤖",
+  Pumpkin: "🐈",
+  Mochi: "🐈‍⬛",
+  Peanut: "🇪🇬🐱",
+  Whiskers: "🐱😿",
+  Prince: "🐈👨",
+  Mocha: "🐈‍⬛👩",
+  Parker: "🇪🇬🐱👨",
+  Pearl: "🇪🇬🐱👩",
+  Candace: "😻👩",
+  Carter: "😻👨",
+  Pumpchi: "🐈🐈‍⬛",
+  Phoenix: "🐈👩",
+  Michael: "🐈‍⬛👨",
+  Winston: "🐱😿👨",
+  Winter: "🐱😿👩",
+  Peaskers: "🐱😿🇪🇬🐱",
+  Sushi: "🐱🍣",
+  Scarlet: "🐱🍣👩",
+  Samuel: "🐱🍣👨",
+  Chonshi: "😻🐱🍣",
+  
+  CatPen: "🐱👾",
+  HTML: "🔽",
+  CSS: "🖌️",
+  JS: "🧠",
+  
+  //EVENT RECIPIES//
+ Candy: "🍬",
+ Chocolate: "🍫",
+ "Red Envelope": "🧧",
+ "Workshop’s Love": "🛠️💖",
+ "Thanks": "🙏",
+ "Dev’s Blessing": "👨‍💻🙏",
+ "Cupid": "💘",
+ "Instant Love": "💕",
+
+};
+
+function withEmoji(name) {
+  return `${EMOJIS[name]} ${name}`;
+}
+
+/* ================= RECIPES ================= */
+
+const RECIPES = {
+  "Paw+Fur": "Cat",
+  "Heart+Cute": "Love",
+  "Cat+Cute": "Addorable",
+  "Cat+Heart": "Best Friend",
+  "Fur+Cute": "Fluffy",
+  "Fluffy+Stars": "Cloud",
+  "Paw+Cute": "Toe Beans",
+  "Cat+Cat": "More Cats",
+  "Cute+Cute": "TOO CUTE",
+  "TOO CUTE+Heart": "Emotional Damage",
+  "Cat+Love": "Loyal Cat",
+
+  "Cat+Paw": "Scratch",
+  "Scratch+Heart": "Apology",
+  "Paw+Love": "Hug",
+  "Fur+Fur": "Yarn",
+  "Paw+Paw": "More Paws",
+
+  "Sound+Cat": "Meow",
+  "Fur+Yarn": "Toy",
+  "More Cats+More Cats": "Gender",
+  "Gender+Cat": "Male Cat",
+  "Gender+More Cats": "Female Cat",
+  "Male Cat+Female Cat": "Egg",
+  "Egg+Female Cat": "Kitten",
+
+  "Meow+Heart": "Purr",
+  "Purr+Heart": "Comfort",
+  "Cat+Comfort": "Happy Cat",
+  "Happy Cat+Cute": "Bliss",
+
+  "Paw+Scratch": "Claw",
+  "Claw+Cat": "Violence",
+  "Violence+Heart": "Guilt",
+  "Guilt+Apology": "Forgiveness",
+
+  "Toy+Cat": "Play",
+  "Play+Sound": "Chaos",
+  "Play+Heart": "Joy",
+
+  "Cat+Scratch": "Zoomies",
+  "Zoomies+Heart": "Exhausted",
+  "Exhausted+Cat": "Nap",
+  "Nap+Cat": "Loaf",
+
+  "Kitten+Heart": "Family",
+  "Family+Cat": "Home",
+  "Home+Cat": "Box",
+  "Box+Cat": "Schrödinger",
+  "Female Cat+Kitten": "Mother",
+  "Male Cat+Kitten": "Father",
+  "Mother+Kitten": "Milk",
+
+  "Meow+Meow": "Loud",
+  "Yarn+Yarn": "Big Yarn",
+  "Toy+Toy": "Broken Toy",
+  "Broken Toy+Cat": "Sad Cat",
+
+  "Sad Cat+Heart": "Comfort",
+  "Sad Cat+Cute": "Bittersweet",
+  "Sad Cat+Sound": "Cry",
+  "Cry+Heart": "Healing",
+
+  "TOO CUTE+Cat": "Overstimulated",
+  "Overstimulated+Heart": "Meltdown",
+  "Meltdown+Comfort": "Safe",
+  "Safe+Cat": "Protected Cat",
+
+  "Sad Cat+Meme": "Sad Cat Meme",
+  "Sound+More Cats": "Internet",
+  "Internet+Cat": "Meme",
+  "Meme+Cute": "Viral",
+  "Viral+More Cats": "Fame",
+  "Fame+Cat": "Famous Cat",
+
+  "Kitten+Cat": "Time",
+  "Time+Cat": "Elder Cat",
+  "Zoomies+Zoomies": "Hyper",
+  "Hyper+Exhausted": "Break",
+
+  "Elder Cat+Time": "Memory",
+  "Elder Cat+Love": "Legacy",
+  "Elder Cat+Heart": "Stars",
+  "Elder Cat+Stars": "Constellation",
+  "Elder Cat+Cloud": "Cafterlife",
+
+  "Internet+Meme": "Robot",
+  "Robot+Cat": "Cat AI",
+  "Cat AI+Home": "Catpen AI",
+  "Cat AI+Catpen AI": "CatGPT",
+
+  "Internet+Home": "Windows",
+  "Windows+Cat": "Catcrosoft",
+  "Catcrosoft+Cat AI": "Catpliot",
+
+  "Sound+Sound": "Noise",
+  "Noise+Cat": "Sound Engine",
+  "CatGPT+Sound Engine": "Search Engine",
+  "Search Engine+Cat": "Caatgle",
+  "Caatgle+Cat AI": "Caatgle Catmeni",
+
+  "Cat+Famous Cat": "Phone",
+  "Phone+Windows": "iMacat",
+  "iMacat+Phone": "Capple",
+  "Capple+Phone": "iPhocat",
+  "Phone+Phone": "Tablet",
+  "Tablet+Capple": "iPacat",
+  "Capple+Cat AI": "Catri",
+  
+  "CatGPT+Kitten": "Chonker",
+  "Chonker+CatGPT": "Workshop",
+  "Cat+Workshop": "Dev",
+  "Dev+CatGPT": "Game",
+  "Chonker+Game": "Lore",
+  "Workshop+Milk": "Fish",
+  
+  "Loaf+Nap": "Night",
+  "Hyper+Loud": "Morning",
+  "Morning+Time": "Noon",
+  "Night+Time": "Midnight",
+  "Midnight+Time": "Predawn",
+  "Noon+Time": "Afternoon",
+  
+  "Internet+Search Engine": "Paper",
+  "Paper+Cat": "Money",
+  "Cafterlife+Cat": "Feather",
+  "Cafterlife+Paper": "Dream Residue",
+  "Pumpkin+Dream Residue": "Empty Cafterlife Map",
+  "Empty Cafterlife Map+Pumpkin": "Cafterlife Map",
+  "Cafterlife Map+Whiskers": "Reunion",
+  
+  "Cat+CatGPT": "Catft",
+  "Loaf+CatGPT": "Cube",
+  "Yarn+Cat": "Pumpkin",
+  "Milk+Cat": "Mochi",
+  "Egg+Cat": "Peanut",
+  "Feather+Cat": "Whiskers",
+  "Father+Pumpkin": "Prince",
+  "Mother+Mochi": "Mocha",
+  "Father+Peanut": "Parker",
+  "Mother+Peanut": "Pearl",
+  "Father+Chonker": "Carter",
+  "Mother+Chonker": "Candace",
+  "Mochi+Pumpkin": "Pumpchi",
+  "Mother+Pumpkin": "Phoenix",
+  "Father+Mochi": "Michael",
+  "Whiskers+Father": "Winston",
+  "Whiskers+Mother": "Winter",
+  "Whiskers+Peanut": "Peaskers",
+  "Fish+Cat": "Sushi",
+  "Sushi+Mother": "Scarlet",
+  "Sushi+Father": "Samuel",
+  "Chonker+Sushi": "Chonshi",
+  
+  "Dev+Chonker": "CatPen",
+  "Dev+Catft": "CSS",
+  "Dev+Cube": "HTML",
+  "CSS+HTML": "JS",
+  
+  //EVENT RECIPES//
+  "Chonker+Love": "Workshop’s Love",
+  "CatGPT+Love": "Thanks",
+  "Dev+Love": "Dev’s Blessing",
+  "Love+More Cats": "Cupid",
+  "Cupid+Cat": "Instant Love",
+
+  
+};
+
+/* ================= GAME STATE ================= */
+
+let discovered = new Set(BASE_ITEMS);
+let selected = [];
+  let candyDrops = 0; // optional counter
+  function saveGame() {
+  localStorage.setItem(
+    "infinite_catft_save",
+    JSON.stringify([...discovered])
+  );
+}
+  function loadGame() {
+  const data = localStorage.getItem("infinite_catft_save");
+  if (data) {
+    discovered = new Set(JSON.parse(data));
+  }
+}
+
+
+
+
+/* ================= UI ================= */
+
+function renderItems() {
+  const itemsDiv = document.getElementById("items");
+  itemsDiv.innerHTML = "";
+
+  [...discovered].sort().forEach(item => {
+    const div = document.createElement("div");
+    div.className = "item";
+
+    if (selected.includes(item)) div.classList.add("selected");
+
+    div.textContent = withEmoji(item);
+
+    div.onclick = () => {
+  if (item === "Candy") {
+    useCandyDrop();
+  } else if (item === "Chocolate") {
+    useChocolateDrop();
+  } else if (item === "Red Envelope") {
+    useRedEnvelope();
+  } else {
+    toggleSelect(item);
+  }
+};
+
+
+
+    itemsDiv.appendChild(div); // ← YOU WERE MISSING THIS
+  });
+}
+
+
+function renderSelected() {
+  document.getElementById("selected").innerText =
+    selected.map(withEmoji).join(" + ");
+}
+
+/* ================= LOGIC ================= */
+
+function toggleSelect(item) {
+  if (selected.length < 2) {
+    selected.push(item);
+  } else {
+    // If already 2 selected, reset and start fresh
+    selected = [item];
+  }
+  renderItems();
+  renderSelected();
+}
+
+
+function craft() {
+  if (selected.length !== 2) return;
+  const [a, b] = selected;
+  const result = RECIPES[`${a}+${b}`] || RECIPES[`${b}+${a}`];
+  const resultDiv = document.getElementById("result");
+
+    
+  if (result) {
+    discovered.add(result);
+    saveGame();
+    resultDiv.textContent = `✨ You made ${withEmoji(result)}!`;
+
+    // Chocolate drop chance on successful craft
+    if (Math.random() < 0.1 && !discovered.has("Chocolate")) {
+      discovered.add("Chocolate");
+      saveGame();
+      resultDiv.textContent += " 🍫 You found a Chocolate!";
+    }
+
+  } else {
+    resultDiv.textContent = "❌ Nothing happened...";
+
+    // Candy drop on failed craft
+    if (Math.random() < 0.1 && !discovered.has("Candy")) {
+      discovered.add("Candy");
+      saveGame();
+      resultDiv.textContent += " 🍬 You found a Candy!";
+    }
+  }
+  // 🧧 Lunar New Year drop condition
+const LNY_CATS = ["Catft", "Cube", "CatGPT", "Dev", "Chonker", "Candace", "Carter", "Pumpkin", "Prince", "Phoenix", "Pumpchi", "Mochi", "Mocha", "Michael", "Peanut", "Pearl", "Parker", "Peaskers", "Whiskers", "Winston", "Winter", "Sushi", "Scarlet", "Samuel"];
+
+if (
+  LNY_CATS.includes(result) &&
+  Math.random() < 0.05 && // 5% feels festive
+  !discovered.has("Red Envelope")
+) {
+  discovered.add("Red Envelope");
+  saveGame();
+  resultDiv.textContent += " 🧧 You received a Red Envelope!";
+}
+
+
+
+
+
+  selected = [];
+  renderItems();
+  renderSelected();
+}
+
+// Use chocolate like candy
+function useChocolateDrop() {
+  discovered.delete("Chocolate"); // consume chocolate
+
+  const allResults = [...new Set(Object.values(RECIPES))];
+  const locked = allResults.filter(
+    r => !discovered.has(r) && !BASE_ITEMS.includes(r)
+  );
+
+  if (locked.length === 0) {
+    document.getElementById("result").textContent =
+      "🍫 The chocolate melts... nothing new remains.";
+    saveGame();
+    renderItems();
+    return;
+  }
+
+  const reward = locked[Math.floor(Math.random() * locked.length)];
+  discovered.add(reward);
+  saveGame();
+
+  document.getElementById("result").textContent =
+    `🍫 Chocolate Drop unlocked ${withEmoji(reward)}!`;
+
+  renderItems();
+}
+  function useCandyDrop() {
+  discovered.delete("Candy"); // consume candy
+
+  const allResults = [...new Set(Object.values(RECIPES))];
+  const locked = allResults.filter(
+    r => !discovered.has(r) && !BASE_ITEMS.includes(r)
+  );
+
+  if (locked.length === 0) {
+    document.getElementById("result").textContent =
+      "🍬 The candy dissolves... nothing new remains.";
+    saveGame();
+    renderItems();
+    return;
+  }
+
+  const reward = locked[Math.floor(Math.random() * locked.length)];
+  discovered.add(reward);
+  saveGame();
+
+  document.getElementById("result").textContent =
+    `🍬 Candy Drop unlocked ${withEmoji(reward)}!`;
+
+  renderItems();
+}
+  function useRedEnvelope() {
+  discovered.delete("Red Envelope"); // consume it
+
+  const allResults = [...new Set(Object.values(RECIPES))];
+
+  const locked = allResults.filter(
+    r => !discovered.has(r) && !BASE_ITEMS.includes(r)
+  );
+
+  if (locked.length === 0) {
+    document.getElementById("result").textContent =
+      "🧧 The envelope opens… but you've already found everything.";
+    saveGame();
+    renderItems();
+    return;
+  }
+
+  const reward = locked[Math.floor(Math.random() * locked.length)];
+  discovered.add(reward);
+  saveGame();
+
+  document.getElementById("result").textContent =
+    `🧧 Lucky! The Red Envelope revealed ${withEmoji(reward)}!`;
+
+  renderItems();
+}
+
+
+
+
+
+
+
+  // ==========================
+// TIME-SENSITIVE RECIPE RESOLVER
+// ==========================
+
+
+
+  selected = [];
+  renderItems();
+  renderSelected();
+
+
+
+/* ================= INIT ================= */
+
+loadGame();
+renderItems();
+renderSelected();
+</script>
+
+</body>
+</html>
