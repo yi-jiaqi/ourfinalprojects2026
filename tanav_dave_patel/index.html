@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>2D Bed Wars - Full Interactive</title>
+<style>
+body { margin:0; overflow:hidden; background:#87CEEB; font-family:Arial;}
+#ui {
+    position:absolute; top:10px; left:10px; color:white;
+    background: rgba(0,0,0,0.5); padding:10px; border-radius:10px;
+}
+canvas { display:block; cursor: crosshair;}
+</style>
+</head>
+<body>
+
+<div id="ui">
+    Iron: <span id="iron">999</span><br>
+    Damage: <span id="damage">10</span><br>
+    Player HP: <span id="playerHP">20</span><br>
+    Enemy HP: <span id="enemyHP">10</span><br>
+    Player Bed: <span id="playerBed">Alive</span><br>
+    Enemy Bed: <span id="enemyBed">Alive</span><br>
+    Place blocks: Right Click | Break blocks: Shift + Click
+</div>
+
+<canvas id="game"></canvas>
+
+<script>
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+let keys = {};
+let blocks = [];
+let iron = 999;
+let damage = 10;
+let playerHP = 20;
+
+const gravity = 0.5;
+
+// Player
+const player = {x:100,y:300,w:30,h:40,dx:0,dy:0,speed:4,jump:-10,grounded:false,alive:true};
+
+// Enemy
+const enemyTemplate = {x:700,y:300,w:30,h:40,speed:2,hp:10,attackPower:1,respawnTime:200};
+let enemy = {...enemyTemplate};
+let enemyRespawnCounter = 0;
+
+// Beds
+const playerBed = {x:50,y:330,w:40,h:20,alive:true};
+const enemyBed = {x:750,y:330,w:40,h:20,alive:true};
+
+// Create islands
+function createIslands() {
+    blocks.push({x:0,y:400,w:200,h:40});
+    blocks.push({x:600,y:400,w:200,h:40});
+    blocks.push({x:300,y:350,w:200,h:40});
+}
+createIslands();
+
+// Input
+document.addEventListener("keydown", e => keys[e.key.toLowerCase()] = true);
+document.addEventListener("keyup", e => keys[e.key.toLowerCase()] = false);
+
+// Block placement & breaking
+canvas.addEventListener("mousedown", e=>{
+    const x = Math.floor(e.offsetX/40)*40;
+    const y = Math.floor(e.offsetY/40)*40;
+
+    if(e.shiftKey){ // break block
+        blocks = blocks.filter(b=>!(b.x===x && b.y===y));
+    } else { // place block
+        blocks.push({x:x,y:y,w:40,h:40});
+    }
+});
+
+// Player attack
+canvas.addEventListener("click", ()=>{
+    if(enemy.alive && Math.abs(player.x - enemy.x)<50) enemy.hp -= damage;
+    if(enemyBed.alive && Math.abs(player.x - enemyBed.x)<50) enemyBed.alive=false;
+});
+
+// Update UI
+function updateUI(){
+    document.getElementById("iron").innerText = iron;
+    document.getElementById("damage").innerText = damage;
+    document.getElementById("playerHP").innerText = playerHP>0?Math.floor(playerHP):0;
+    document.getElementById("enemyHP").innerText = enemy.hp>0?Math.floor(enemy.hp):0;
+    document.getElementById("playerBed").innerText = playerBed.alive?"Alive":"Destroyed";
+    document.getElementById("enemyBed").innerText = enemyBed.alive?"Alive":"Destroyed";
+}
+
+// Enemy AI
+function enemyAI(){
+    if(enemy.hp<=0){
+        if(enemyBed.alive){
+            enemyRespawnCounter++;
+            if(enemyRespawnCounter>=enemy.respawnTime){enemy={...enemyTemplate};enemyRespawnCounter=0;}
+        }else return;
+    }
+    if(player.x<enemy.x) enemy.x-=enemy.speed;
+    if(player.x>enemy.x) enemy.x+=enemy.speed;
+    if(Math.abs(player.x-enemy.x)<35 && Math.abs(player.y-enemy.y)<50){
+        playerHP-=enemy.attackPower*0.1;
+        if(playerHP<0) playerHP=0;
+    }
+}
+
+// Player movement
+function playerMovement(){
+    player.dx=0;
+    if(keys["a"]) player.dx=-player.speed;
+    if(keys["d"]) player.dx=player.speed;
+    if(keys["w"] && player.grounded) player.dy=player.jump;
+
+    player.dy+=gravity;
+    player.x+=player.dx;
+    player.y+=player.dy;
+    player.grounded=false;
+
+    blocks.forEach(block=>{
+        if(player.x<block.x+block.w && player.x+player.w>block.x &&
+           player.y<block.y+block.h && player.y+player.h>block.y){
+               if(player.dy>0){
+                   player.y=block.y-player.h;
+                   player.dy=0;
+                   player.grounded=true;
+               }
+        }
+    });
+
+    // Fall off map → respawn if bed alive, die if bed destroyed
+    if(player.y>canvas.height){
+        if(playerBed.alive){player.x=playerBed.x+playerBed.w/2;player.y=playerBed.y-40;player.dy=0;}
+        else {player.alive=false; playerHP=0;}
+    }
+}
+
+// Draw
+function draw(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+
+    // Blocks
+    ctx.fillStyle="#8B4513";
+    blocks.forEach(b=>ctx.fillRect(b.x,b.y,b.w,b.h));
+
+    // Player
+    if(player.alive){ctx.fillStyle="blue"; ctx.fillRect(player.x,player.y,player.w,player.h);}
+    // Enemy
+    ctx.fillStyle=enemy.hp>0?"red":"gray";
+    ctx.fillRect(enemy.x,enemy.y,enemy.w,enemy.h);
+    // Beds
+    ctx.fillStyle=playerBed.alive?"cyan":"black";
+    ctx.fillRect(playerBed.x,playerBed.y,playerBed.w,playerBed.h);
+    ctx.fillStyle=enemyBed.alive?"purple":"black";
+    ctx.fillRect(enemyBed.x,enemyBed.y,enemyBed.w,enemyBed.h);
+}
+
+// Game loop
+function update(){
+    if(player.alive){
+        playerMovement();
+        enemyAI();
+        updateUI();
+        draw();
+        requestAnimationFrame(update);
+    }else{
+        draw();
+        ctx.fillStyle="black";
+        ctx.font="50px Arial";
+        ctx.fillText("💀 You Died", canvas.width/2-120, canvas.height/2);
+    }
+}
+
+update();
+</script>
+</body>
+</html>
