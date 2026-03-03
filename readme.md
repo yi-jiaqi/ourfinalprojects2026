@@ -1,5 +1,5 @@
 **Final Projects of Simon Baruch Coders**
-*Instructor: Jiaqi Yi / Mr. Yi"
+*Instructor: Jiaqi Yi / Mr. Yi*
 
 Hi Everyone! Here are our final projects for our weekly little class.
 
