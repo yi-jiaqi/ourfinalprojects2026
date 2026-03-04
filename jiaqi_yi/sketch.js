@@ -15,9 +15,9 @@ function setup() {
   createCanvas(windowWidth, windowHeight);
   textAlign(CENTER);
   button = createButton("click me");
-  button.position(50, 100);
+  button.position(width/3, 100);
   buy = createButton("buy boost");
-  buy.position(300, 100);
+  buy.position(width/3 * 2, 100);
 
   button.mousePressed(plusOne);
 
