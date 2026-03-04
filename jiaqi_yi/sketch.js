@@ -12,7 +12,7 @@ function setup() {
   colorOfBackground = color(220, 220, 220);
   colorOfBackground_Failed = color(255, 0, 0);
 
-  createCanvas(400, 500);
+  createCanvas(400, 600);
   textAlign(CENTER);
   button = createButton("click me");
   button.position(50, 100);
@@ -43,6 +43,8 @@ function draw() {
 
   text("Attempts Left:", 200, 350);
   text(attempts, 200, 400);
+
+  text("Current High Score By Benji: 134,217,812", 200, 450);
 }
 
 function plusOne() {
