@@ -6,6 +6,7 @@ canvas {
   display: block;
 }
 
+
   .student-text {
     margin: 24px auto;
     max-width: 800px;
@@ -13,5 +14,13 @@ canvas {
     line-height: 1.6;
     background: #f5f5f5;
     color: #222;
+    border-radius: 8px;
+        font-family: "Silkscreen", monospace;
+  }
+
+    .kleki-image {
+    width: 100%;
+    max-width: 700px;
+    height: auto;
     border-radius: 8px;
   }
