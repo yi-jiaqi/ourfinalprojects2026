@@ -1099,7 +1099,7 @@ function keyTyped() {
 
     if (key === "Enter") {
 
-      if (codeInput === "BojoHead" ||codeInput === "1") flyMode = true;
+      if (codeInput === "Bojo-Head") flyMode = true;
 
       enteringCode = false;
 
