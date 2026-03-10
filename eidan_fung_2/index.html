@@ -1,0 +1,210 @@
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Suika Cat Game 🍉😺</title>
+<style>
+  body {
+    background: #111;
+    color: white;
+    font-family: system-ui;
+    text-align: center;
+  }
+  canvas {
+    background: #222;
+    border: 2px solid #555;
+    margin-top: 10px;
+  }
+</style>
+</head>
+<body>
+
+<h1>Suika Cat Game 🍉😺</h1>
+<p>Click to drop cats. Merge identical cats!</p>
+
+<canvas id="game" width="400" height="600"></canvas>
+
+<script>
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
+
+const GRAVITY = 0.35;
+const FLOOR = canvas.height - 10;
+const GAME_OVER_LINE = 80;
+
+const fruitTypes = [
+  { r: 14, color: "#ffd166", face: "😺" },
+  { r: 20, color: "#ffb703", face: "😸" },
+  { r: 26, color: "#fb8500", face: "😿" },
+  { r: 32, color: "#ff006e", face: "😻" },
+  { r: 38, color: "#8338ec", face: "😽" },
+  { r: 44, color: "#3a86ff", face: "🙀" },
+  { r: 52, color: "#2ec4b6", face: "😹" },
+  { r: 62, color: "#06d6a0", face: "😾" },
+  { r: 76, color: "#118ab2", face: "😼" },
+  { r: 94, color: "#073b4c", face: "😸🍉" },
+  { r: 100, color: "#6cbe45", face: "😸🍉" },
+  { r: 106, color: "#ff6319", face: "😿🍉" },
+  { r: 112, color: "#ffffff", face: "😻🍉" },
+  { r: 118, color: "#555555", face: "😽🍉" },
+  { r: 124, color: "#000000", face: "🙀🍉" },  
+];
+
+let fruits = [];
+let gameOver = false;
+
+class Fruit {
+  constructor(x, type, y = null) {
+    this.type = type;
+    this.r = fruitTypes[type].r;
+    this.x = x;
+    this.y = y ?? (GAME_OVER_LINE + this.r + 5);
+    this.vy = 0;
+    this.spawnTimer = 30;
+  }
+
+  update() {
+    this.vy += GRAVITY;
+    this.y += this.vy;
+
+    if (this.y + this.r > FLOOR) {
+      this.y = FLOOR - this.r;
+      this.vy = 0;
+    }
+
+    if (this.x - this.r < 0) this.x = this.r;
+    if (this.x + this.r > canvas.width) this.x = canvas.width - this.r;
+
+    if (this.spawnTimer > 0) this.spawnTimer--;
+  }
+
+  draw() {
+    ctx.beginPath();
+    ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
+    ctx.fillStyle = fruitTypes[this.type].color;
+    ctx.fill();
+
+    ctx.font = `${this.r}px serif`;
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillStyle = "white";
+    ctx.fillText(fruitTypes[this.type].face, this.x, this.y + 1);
+  }
+}
+
+function resolveCollisions() {
+  for (let i = 0; i < fruits.length; i++) {
+    for (let j = i + 1; j < fruits.length; j++) {
+      const a = fruits[i];
+      const b = fruits[j];
+      const dx = b.x - a.x;
+      const dy = b.y - a.y;
+      const dist = Math.hypot(dx, dy);
+      const minDist = a.r + b.r;
+
+      if (dist < minDist && dist > 0) {
+        const overlap = minDist - dist;
+        const nx = dx / dist;
+        const ny = dy / dist;
+
+        a.x -= nx * overlap / 2;
+        a.y -= ny * overlap / 2;
+        b.x += nx * overlap / 2;
+        b.y += ny * overlap / 2;
+      }
+    }
+  }
+}
+
+function checkMerges() {
+  for (let i = 0; i < fruits.length; i++) {
+    for (let j = i + 1; j < fruits.length; j++) {
+      const a = fruits[i];
+      const b = fruits[j];
+
+      if (
+        a.type === b.type &&
+        a.type < fruitTypes.length - 1 &&
+        Math.abs(a.vy) < 0.2 &&
+        Math.abs(b.vy) < 0.2
+      ) {
+        const dx = b.x - a.x;
+        const dy = b.y - a.y;
+        const dist = Math.hypot(dx, dy);
+
+       if (dist <= a.r + b.r + 1) {
+          const nx = (a.x + b.x) / 2;
+          const ny = (a.y + b.y) / 2;
+
+          fruits.splice(j, 1);
+          fruits.splice(i, 1);
+          fruits.push(new Fruit(nx, a.type + 1, ny));
+          return;
+        }
+      }
+    }
+  }
+}
+
+function checkGameOver() {
+  for (const f of fruits) {
+    if (f.y - f.r < GAME_OVER_LINE && Math.abs(f.vy) < 0.1 && f.spawnTimer === 0) {
+      gameOver = true;
+    }
+  }
+}
+
+canvas.addEventListener("click", e => {
+  if (gameOver) return;
+  const rect = canvas.getBoundingClientRect();
+  const x = e.clientX - rect.left;
+  fruits.push(new Fruit(x, 0));
+});
+
+function drawGameOver() {
+  ctx.fillStyle = "rgba(0,0,0,0.6)";
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = "white";
+  ctx.font = "32px system-ui";
+  ctx.textAlign = "center";
+  ctx.fillText("Game Over 😿", canvas.width / 2, canvas.height / 2);
+}
+
+function update() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // danger line
+  ctx.strokeStyle = "red";
+  ctx.beginPath();
+  ctx.moveTo(0, GAME_OVER_LINE);
+  ctx.lineTo(canvas.width, GAME_OVER_LINE);
+  ctx.stroke();
+
+  // physics update
+  fruits.forEach(f => f.update());
+
+  // collision + merge passes
+  for (let i = 0; i < 3; i++) {
+    resolveCollisions();
+    checkMerges();
+  }
+
+  // draw
+  fruits.forEach(f => f.draw());
+
+  // game over check
+  checkGameOver();
+
+  if (gameOver) drawGameOver();
+  else requestAnimationFrame(update);
+}
+
+update();
+</script>
+  <section class="student-text">
+    <h2>Guide</h2>
+    <p>
+Suika Cat Game is a game where you merge identical cats and try to get the highest score/highest evolution, please note autoclickers help you in the start, but you’ll eventually lose. Instead of fruits and only 11 evolutions, there are 15 evolutions, have fun!
+    </p>
+  </section>
+</body>
+</html>
