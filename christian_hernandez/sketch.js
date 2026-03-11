@@ -478,7 +478,8 @@ function createPlatformLayer(y) {
 
       platform.hasSpike = true;
 
-      platform.spikeX = random(platform.x + 10, platform.x + platform.w - 20);
+      // platform.spikeX = random(platform.x + 10, platform.x + platform.w - 20);
+      platform.spikeX = platform.x + platform.w / 2 - 5; // Center the spike
 
       lastSpikeY = y;
 
