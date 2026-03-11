@@ -2,13 +2,21 @@
 
 // WATER BALLOON INFINITE CLIMBER
 
-// +5 UP, -5 DOWN
+// FULL VERSION WITH:
 
-// SPIKES AFTER 50 SCORE (SAFE SPACING)
+// - Scoring
 
-// DOUBLE JUMP EVERY 10 POINTS
+// - Spikes
 
-// POP + WATER BURST ON SPIKE ONLY
+// - Double Jump
+
+// - Pop + Water Burst
+
+// - Secret Fly Cheat (BojoHead)
+
+// - Auto Score in Fly Mode
+
+// - Spiky Balls (roll down platforms after 100 points)
 
 // =======================================
 
@@ -78,6 +86,26 @@ let popDuration = 30;
 let waterParticles = [];
 
 
+// Cheat system
+
+let enteringCode = false;
+
+let codeInput = "";
+
+let flyMode = false;
+
+let flyScoreTimer = 0; // auto score in fly mode
+
+
+// Spiky balls
+
+let spikyBalls = [];
+
+let spikySpawnTimer = 0;
+
+let spikySpawnInterval = 2000; // max 1 ball every 2 sec
+
+
 // ======================
 
 // SETUP
@@ -122,6 +150,8 @@ function draw() {
 
   cleanPlatforms();
 
+  updateSpikyBalls();
+
 
   push();
 
@@ -131,6 +161,8 @@ function draw() {
   drawPlatforms();
 
   drawBalloon();
+
+  drawSpikyBalls();
 
   updateWaterParticles();
 
@@ -152,13 +184,11 @@ function draw() {
 
 function updateBall() {
 
-
-  // Stop physics during pop
+  // POP FREEZE
 
   if (isPopping) {
 
     popTimer++;
-
 
     if (popTimer >= popDuration) {
 
@@ -172,6 +202,132 @@ function updateBall() {
 
   }
 
+
+  // FLY MODE
+
+  if (flyMode) {
+
+    // console.log("flyMode")
+
+    let dx = mouseX - ball.x;
+
+    let dy = mouseY + camY - ball.y;
+
+    let angle = atan2(dy, dx);
+
+
+    ball.vx = lerp(ball.vx, cos(angle) * 8, 0.2);
+
+    ball.vy = lerp(ball.vy, sin(angle) * 8, 0.2);
+
+
+    ball.x += ball.vx;
+
+    ball.y += ball.vy;
+
+
+    // SPIKE COLLISION IN FLY MODE
+
+    for (let p of platforms) {
+
+      if (p.hasSpike && p.spikeX !== null) {
+
+        let spikeTop = p.y - 10;
+
+        if (
+
+          ball.x + ball.r > p.spikeX &&
+
+          ball.x - ball.r < p.spikeX + 10 &&
+
+          ball.y + ball.r > spikeTop &&
+
+          ball.y - ball.r < p.y
+
+        ) {
+
+          isPopping = true;
+
+          popTimer = 0;
+
+          ball.vx = 0;
+
+          ball.vy = 0;
+
+          flyMode = false;
+
+          createWaterBurst();
+
+        }
+
+      }
+
+    }
+
+
+
+    // Auto-score in fly mode
+
+    flyScoreTimer += deltaTime / 1000;
+
+    if (flyScoreTimer >= 1) {
+
+      score += 10; // 1 point per second
+
+      flyScoreTimer = 0;
+
+    }
+
+
+    return; // skip normal physics
+
+  }
+
+
+      // SPIKY BALL COLLISION IN FLY MODE
+
+    if (score >= 100 && spikyBalls.length < 2) {
+
+      // console.log("score >= 11")
+
+      spikySpawnTimer += deltaTime;
+
+
+      if (spikySpawnTimer > spikySpawnInterval) {
+
+        // pick random platform anywhere above camera top
+
+        // console.log("spikySpawnTimer > spikySpawnInterval")
+
+        let candidatePlatforms = platforms.filter(
+
+          (p) => p.y < camY + height && p.y > camY - 50
+
+        );
+
+        if (candidatePlatforms.length > 0) {
+
+         spikyBalls.push({
+
+  x: random(40, width - 40),
+
+  y: camY - 40,
+
+  r: 12,
+
+  vx: random([-2, 2]),
+
+  vy: random(2,5)
+
+});
+
+        }
+
+      }
+
+    }
+
+  
 
   let prevY = ball.y;
 
@@ -229,12 +385,10 @@ function updateBall() {
 
       targetScaleX = 1.4;
 
-
       onGround = true;
 
 
       if (lastPlatformId !== null && p.id !== lastPlatformId) {
-
 
         if (p.y < lastPlatformY) {
 
@@ -263,7 +417,6 @@ function updateBall() {
       lastPlatformY = p.y;
 
       lastPlatformId = p.id;
-
 
       break;
 
@@ -310,7 +463,28 @@ function updateBall() {
   }
 
 
-  // Restore squish
+  // SPIKY BALL COLLISION
+
+  for (let s of spikyBalls) {
+
+    let d = dist(ball.x, ball.y, s.x, s.y);
+
+    if (d < ball.r + s.r) {
+
+      isPopping = true;
+
+      popTimer = 0;
+
+      ball.vx = 0;
+
+      ball.vy = 0;
+
+      createWaterBurst();
+
+    }
+
+  }
+
 
   if (!onGround) {
 
@@ -326,7 +500,7 @@ function updateBall() {
   scaleY = lerp(scaleY, targetScaleY, 0.2);
 
 
-  // Fall death (no pop animation)
+  // FALL DEATH
 
   if (ball.y - camY > height + 120) {
 
@@ -335,6 +509,9 @@ function updateBall() {
     resetGame();
 
   }
+
+
+  // SPAWN SPIKY BALLS AFTER 100 POINTS
 
 }
 
@@ -350,6 +527,13 @@ function updateCamera() {
   }
 
 }
+
+
+// ======================
+
+// UI
+
+// ======================
 
 
 function drawUI() {
@@ -371,12 +555,55 @@ function drawUI() {
 
   }
 
+
+  // Code box
+
+  fill(30);
+
+  rect(width - 90, 10, 80, 30, 6);
+
+
+  fill(255);
+
+  textAlign(CENTER, CENTER);
+
+  textSize(14);
+
+  text("code", width - 50, 25);
+
+
+  if (enteringCode) {
+
+    fill(0);
+
+    rect(width - 180, 50, 170, 30, 6);
+
+
+    fill(255);
+
+    textAlign(LEFT, CENTER);
+
+    text(codeInput, width - 170, 65);
+
+  }
+
+
+  if (flyMode) {
+
+    fill(0, 255, 100);
+
+    textAlign(RIGHT, TOP);
+
+    text("FLY MODE", width - 10, 50);
+
+  }
+
 }
 
 
 // ======================
 
-// PLATFORM SYSTEM
+// PLATFORMS
 
 // ======================
 
@@ -385,29 +612,12 @@ function generateInitialPlatforms() {
 
   let y = height - 40;
 
-
   let w = 120;
 
   let x = width / 2 - w / 2;
 
 
-  platforms.push({
-
-    x: x,
-
-    y: y,
-
-    w: w,
-
-    h: 12,
-
-    id: platforms.length,
-
-    hasSpike: false,
-
-    spikeX: null
-
-  });
+  platforms.push({ x, y, w, h: 12, id: 0, hasSpike: false, spikeX: null });
 
 
   y -= 80;
@@ -442,18 +652,18 @@ function generatePlatforms() {
 
 function createPlatformLayer(y) {
 
-  let platformCount = random() < 0.25 ? 2 : 1;
+  let count = random() < 0.25 ? 2 : 1;
 
 
   function makePlatform(x, w) {
 
     let platform = {
 
-      x: x,
+      x,
 
-      y: y,
+      y,
 
-      w: w,
+      w,
 
       h: 12,
 
@@ -461,7 +671,7 @@ function createPlatformLayer(y) {
 
       hasSpike: false,
 
-      spikeX: null
+      spikeX: null,
 
     };
 
@@ -491,7 +701,7 @@ function createPlatformLayer(y) {
   }
 
 
-  if (platformCount === 1) {
+  if (count === 1) {
 
     let w = random(90, 130);
 
@@ -505,15 +715,9 @@ function createPlatformLayer(y) {
 
     let w2 = random(90, 120);
 
+    makePlatform(random(40, width / 2 - w1 - 20), w1);
 
-    let x1 = random(40, width / 2 - w1 - 20);
-
-    let x2 = random(width / 2 + 20, width - w2 - 40);
-
-
-    makePlatform(x1, w1);
-
-    makePlatform(x2, w2);
+    makePlatform(random(width / 2 + 20, width - w2 - 40), w2);
 
   }
 
@@ -522,7 +726,7 @@ function createPlatformLayer(y) {
 
 function cleanPlatforms() {
 
-  platforms = platforms.filter(p => p.y < camY + height + 100);
+  platforms = platforms.filter((p) => p.y < camY + height + 100);
 
 }
 
@@ -531,7 +735,6 @@ function drawPlatforms() {
 
   noStroke();
 
-
   for (let p of platforms) {
 
     fill(140, 90, 50);
@@ -539,25 +742,11 @@ function drawPlatforms() {
     rect(p.x, p.y, p.w, p.h, 4);
 
 
-    if (p.hasSpike && p.spikeX !== null) {
+    if (p.hasSpike) {
 
       fill(255, 0, 0);
 
-      triangle(
-
-        p.spikeX,
-
-        p.y,
-
-        p.spikeX + 10,
-
-        p.y,
-
-        p.spikeX + 5,
-
-        p.y - 10
-
-      );
+      triangle(p.spikeX, p.y, p.spikeX + 10, p.y, p.spikeX + 5, p.y - 10);
 
     }
 
@@ -591,16 +780,13 @@ function drawBalloon() {
 
     let t = popTimer / popDuration;
 
+    if (t < 0.5) popScale = 1 + t * 2;
 
-    if (t < 0.5) {
+    else {
 
-      popScale = 1 + t * 2;      // expand
+      popScale = 2 - t * 2;
 
-    } else {
-
-      popScale = 2 - t * 2;      // shrink
-
-      alpha = 255 * (1 - t);     // fade
+      alpha = 255 * (1 - t);
 
     }
 
@@ -612,21 +798,15 @@ function drawBalloon() {
   scale(scaleX * popScale, scaleY * popScale);
 
 
-  // Balloon body
-
   fill(0, 100, 255, alpha);
 
   ellipse(0, 0, ball.r * 2, ball.r * 2.6);
 
 
-  // Shine
-
   fill(255, 255, 255, 90 * (alpha / 255));
 
   ellipse(-ball.r * 0.4, -ball.r * 0.4, ball.r * 0.6);
 
-
-  // 🎀 TIE (RESTORED)
 
   fill(0, 70, 220, alpha);
 
@@ -656,7 +836,6 @@ function drawBalloon() {
 
   pop();
 
-
   pop();
 
 }
@@ -685,7 +864,7 @@ function createWaterBurst() {
 
       size: random(4, 8),
 
-      alpha: 255
+      alpha: 255,
 
     });
 
@@ -700,7 +879,6 @@ function updateWaterParticles() {
 
     let w = waterParticles[i];
 
-
     w.vy += 0.3;
 
     w.x += w.vx;
@@ -712,14 +890,92 @@ function updateWaterParticles() {
 
     fill(0, 150, 255, w.alpha);
 
-    noStroke();
-
     ellipse(w.x, w.y, w.size);
 
 
-    if (w.alpha <= 0) {
+    if (w.alpha <= 0) waterParticles.splice(i, 1);
 
-      waterParticles.splice(i, 1);
+  }
+
+}
+
+
+// ======================
+
+// SPIKY BALLS
+
+// ======================
+
+
+function updateSpikyBalls() {
+
+  for (let i = spikyBalls.length - 1; i >= 0; i--) {
+
+    let s = spikyBalls[i];
+
+
+    // Apply gravity
+
+    s.vy += gravity;
+
+    s.y += s.vy;
+
+
+    // Horizontal movement only if on platform
+
+    let onPlatform = false;
+
+
+    for (let p of platforms) {
+
+      if (
+
+        s.vy >= 0 &&
+
+        s.y + s.r >= p.y &&
+
+        s.y + s.r <= p.y + p.h &&
+
+        s.x + s.r > p.x &&
+
+        s.x - s.r < p.x + p.w
+
+      ) {
+
+        // Landed on platform
+
+        s.y = p.y - s.r;
+
+        s.vy = 0;
+
+        onPlatform = true;
+
+
+        // Roll
+
+        s.x += s.vx;
+
+        break;
+
+      }
+
+    }
+
+
+    // Free fall if not on platform
+
+    if (!onPlatform) {
+
+      s.x += s.vx; // continue horizontal while falling
+
+    }
+
+
+    // Remove if below screen
+
+    if (s.y - camY > height + 50) {
+
+      spikyBalls.splice(i, 1);
 
     }
 
@@ -727,6 +983,80 @@ function updateWaterParticles() {
 
 }
 
+function drawSpikyBalls() {
+
+  for (let s of spikyBalls) {
+
+    push();
+
+    translate(s.x, s.y);
+
+    noStroke();
+
+
+    // Draw main ball
+
+    fill(150, 0, 0);
+
+    ellipse(0, 0, s.r * 2);
+
+
+    // Draw spikes around the ball
+
+    fill(200, 0, 0);
+
+    let spikes = 8;
+
+    for (let i = 0; i < spikes; i++) {
+
+      let angle = (TWO_PI / spikes) * i;
+
+      let sx = cos(angle) * s.r;
+
+      let sy = sin(angle) * s.r;
+
+      triangle(
+
+        sx,
+
+        sy,
+
+        sx + cos(angle) * 6,
+
+        sy + sin(angle) * 6,
+
+        sx + cos(angle + 0.2) * 6,
+
+        sy + sin(angle + 0.2) * 6
+
+      );
+
+    }
+
+
+    // Angry face
+
+    fill(0);
+
+    ellipse(-s.r * 0.3, -s.r * 0.3, s.r * 0.3); // left eye
+
+    ellipse(s.r * 0.3, -s.r * 0.3, s.r * 0.3); // right eye
+
+
+    noFill();
+
+    stroke(0);
+
+    strokeWeight(2);
+
+    arc(0, s.r * 0.1, s.r, s.r * 0.5, PI, TWO_PI); // angry mouth
+
+
+    pop();
+
+  }
+
+}
 
 // ======================
 
@@ -739,7 +1069,6 @@ function keyPressed() {
 
   if (keyCode === UP_ARROW && onGround) {
 
-
     ball.vy = jumpStrength;
 
     onGround = false;
@@ -747,11 +1076,9 @@ function keyPressed() {
     targetScaleY = 1.4;
 
     targetScaleX = 0.6;
-
 
   } else if (keyCode === UP_ARROW && youCanDoubleJump) {
 
-
     ball.vy = jumpStrength;
 
     onGround = false;
@@ -759,7 +1086,6 @@ function keyPressed() {
     targetScaleY = 1.4;
 
     targetScaleX = 0.6;
-
 
     youCanDoubleJump = false;
 
@@ -768,7 +1094,57 @@ function keyPressed() {
 }
 
 
+function keyTyped() {
+
+  if (enteringCode) {
+
+    if (key === "Enter") {
+
+      if (codeInput === "Bojo-Head") flyMode = true;
+
+      enteringCode = false;
+
+      return;
+
+    }
+
+    if (key === "Backspace") {
+
+      codeInput = codeInput.slice(0, -1);
+
+      return;
+
+    }
+
+    if (codeInput.length < 20) codeInput += key;
+
+  }
+
+}
+
+
 function mousePressed() {
+
+  if (
+
+    mouseX > width - 90 &&
+
+    mouseX < width - 10 &&
+
+    mouseY > 10 &&
+
+    mouseY < 40
+
+  ) {
+
+    enteringCode = true;
+
+    codeInput = "";
+
+    return;
+
+  }
+
 
   if (!gameStarted) gameStarted = true;
 
@@ -810,6 +1186,20 @@ function resetGame() {
   waterParticles = [];
 
 
+  flyMode = false;
+
+  flyScoreTimer = 0;
+
+  enteringCode = false;
+
+  codeInput = "";
+
+
+  spikyBalls = [];
+
+  spikySpawnTimer = 0;
+
+
   generateInitialPlatforms();
 
 
@@ -826,7 +1216,7 @@ function resetGame() {
 
     vx: 0,
 
-    vy: 0
+    vy: 0,
 
   };
 
