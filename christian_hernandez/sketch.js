@@ -403,11 +403,11 @@ function updateBall() {
         }
 
 
-        while (score >= lastDoubleJumpScore + 10) {
+        while (score >= lastDoubleJumpScore + 9) {
 
           youCanDoubleJump = true;
 
-          lastDoubleJumpScore += 10;
+          lastDoubleJumpScore += 9;
 
         }
 
