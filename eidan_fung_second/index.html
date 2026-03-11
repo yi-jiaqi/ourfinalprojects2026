@@ -51,6 +51,7 @@ const fruitTypes = [
 
 let fruits = [];
 let gameOver = false;
+let lastDropX = canvas.width / 2;
 
 class Fruit {
   constructor(x, type, y = null) {
@@ -153,11 +154,29 @@ function checkGameOver() {
   }
 }
 
-canvas.addEventListener("click", e => {
+function action(evt = null){
   if (gameOver) return;
   const rect = canvas.getBoundingClientRect();
-  const x = e.clientX - rect.left;
+  const x = evt ? (evt.clientX - rect.left) : lastDropX;
+  lastDropX = x;
   fruits.push(new Fruit(x, 0));
+}
+
+
+
+canvas.addEventListener("click", e => {
+  action(e);
+});
+
+canvas.addEventListener("mousemove", e => {
+  const rect = canvas.getBoundingClientRect();
+  lastDropX = e.clientX - rect.left;
+});
+
+document.addEventListener("keydown", e => {
+  if (e.key === "l" || e.key === "L") {
+    action();
+  }
 });
 
 function drawGameOver() {
