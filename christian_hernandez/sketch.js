@@ -103,7 +103,7 @@ let spikyBalls = [];
 
 let spikySpawnTimer = 0;
 
-let spikySpawnInterval = 2000; // max 1 ball every 2 sec
+let spikySpawnInterval = 10000; // max 1 ball every 2 sec
 
 
 // ======================
